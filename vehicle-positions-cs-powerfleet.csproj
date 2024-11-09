@@ -8,4 +8,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Resources\VehiclePositions.dat" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\VehiclePositions.dat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
