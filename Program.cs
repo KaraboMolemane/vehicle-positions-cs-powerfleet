@@ -141,7 +141,6 @@ public class Program
 
     public static void Main()
     {
-    
         var startTime = DateTime.Now;
 
         // 10 pre-defined co-ordinates or positions
@@ -162,13 +161,13 @@ public class Program
         var startTimeFile = DateTime.Now;
         VehicleData[] vehicles = ReadVehicleData("VehiclePositions.dat");
         var endTimeFile = DateTime.Now;
-        Console.WriteLine($"File reading execution time: {(endTimeFile - startTimeFile).TotalMilliseconds} milliseconds");
+        Console.WriteLine($"File reading execution time: {Math.Round((endTimeFile - startTimeFile).TotalMilliseconds)} milliseconds");
 
-        // // Find the closest registrations
+        // Find the closest registrations
         var startTimeClosest = DateTime.Now;
         FindClosestRegistrations(positions, vehicles);
         var endTimeClosest = DateTime.Now;
-        Console.WriteLine($"Finding closest vehicle execution time: {(endTimeClosest - startTimeClosest).TotalMilliseconds} milliseconds");
+        Console.WriteLine($"Finding closest vehicle execution time: {Math.Round((endTimeClosest - startTimeClosest).TotalMilliseconds)} milliseconds");
 
         // Print the results
         foreach (var position in positions)
@@ -178,6 +177,6 @@ public class Program
 
         // Print total execution time
         var endTime = DateTime.Now;
-        Console.WriteLine($"Total execution time: {(endTime - startTime).TotalMilliseconds} milliseconds");
+        Console.WriteLine($"Total execution time: {Math.Round((endTime - startTime).TotalMilliseconds)} milliseconds");
     }
 }
