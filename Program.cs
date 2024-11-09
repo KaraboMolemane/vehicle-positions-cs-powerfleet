@@ -24,6 +24,7 @@ public class Program
         public double Latitude;
         public double Longitude;
         public int ClosestId;
+        public string VehicleRegistration;
     }
 
     public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
@@ -48,7 +49,7 @@ public class Program
     {
         string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", filename);
         byte[] fileBytes = File.ReadAllBytes(filePath);
-        int size = Marshal.SizeOf(typeof(VehicleData));
+        int size = Marshal.SizeOf<VehicleData>();
         int numEntries = fileBytes.Length / size;
 
         VehicleData[] vehicles = new VehicleData[numEntries];
@@ -57,7 +58,7 @@ public class Program
         for (int i = 0; i < numEntries; i++)
         {
             Marshal.Copy(fileBytes, i * size, ptr, size);
-            vehicles[i] = (VehicleData)Marshal.PtrToStructure(ptr, typeof(VehicleData));
+            vehicles[i] = Marshal.PtrToStructure<VehicleData>(ptr);
         }
 
         Marshal.FreeHGlobal(ptr);
@@ -118,45 +119,46 @@ public class Program
             if (closestIndex != -1)
             {
                 positions[i].ClosestId = vehicles[closestIndex].VehicleId;
+                positions[i].VehicleRegistration = vehicles[closestIndex].VehicleRegistration;
             }
         }
     }
 
     public static void Main()
-{
-    var startTime = DateTime.Now;
-
-    Position[] positions = new Position[]
     {
-        new Position { PositionId = 1, Latitude = 34.544909, Longitude = -102.100843 },
-        new Position { PositionId = 2, Latitude = 32.345544, Longitude = -99.123124 },
-        new Position { PositionId = 3, Latitude = 33.234235, Longitude = -100.214124 },
-        new Position { PositionId = 4, Latitude = 35.195739, Longitude = -95.348899 },
-        new Position { PositionId = 5, Latitude = 31.895839, Longitude = -97.789573 },
-        new Position { PositionId = 6, Latitude = 32.895839, Longitude = -101.789573 },
-        new Position { PositionId = 7, Latitude = 34.115839, Longitude = -100.225732 },
-        new Position { PositionId = 8, Latitude = 32.335839, Longitude = -99.992232 },
-        new Position { PositionId = 9, Latitude = 33.535339, Longitude = -94.792232 },
-        new Position { PositionId = 10, Latitude = 32.234235, Longitude = -100.222222 }
-    };
+        var startTime = DateTime.Now;
 
-    var startTimeFile = DateTime.Now;
-    VehicleData[] vehicles = ReadVehicleData("VehiclePositions.dat");
-    var endTimeFile = DateTime.Now;
-    Console.WriteLine($"File reading execution time: {(endTimeFile - startTimeFile).TotalMilliseconds} milliseconds");
+        Position[] positions = new Position[]
+        {
+            new Position { PositionId = 1, Latitude = 34.544909, Longitude = -102.100843 },
+            new Position { PositionId = 2, Latitude = 32.345544, Longitude = -99.123124 },
+            new Position { PositionId = 3, Latitude = 33.234235, Longitude = -100.214124 },
+            new Position { PositionId = 4, Latitude = 35.195739, Longitude = -95.348899 },
+            new Position { PositionId = 5, Latitude = 31.895839, Longitude = -97.789573 },
+            new Position { PositionId = 6, Latitude = 32.895839, Longitude = -101.789573 },
+            new Position { PositionId = 7, Latitude = 34.115839, Longitude = -100.225732 },
+            new Position { PositionId = 8, Latitude = 32.335839, Longitude = -99.992232 },
+            new Position { PositionId = 9, Latitude = 33.535339, Longitude = -94.792232 },
+            new Position { PositionId = 10, Latitude = 32.234235, Longitude = -100.222222 }
+        };
 
-    var startTimeClosest = DateTime.Now;
-    FindClosestRegistrations(positions, vehicles);
-    var endTimeClosest = DateTime.Now;
-    Console.WriteLine($"Finding closest vehicle execution time: {(endTimeClosest - startTimeClosest).TotalMilliseconds} milliseconds");
+        var startTimeFile = DateTime.Now;
+        VehicleData[] vehicles = ReadVehicleData("VehiclePositions.dat");
+        var endTimeFile = DateTime.Now;
+        Console.WriteLine($"File reading execution time: {(endTimeFile - startTimeFile).TotalMilliseconds} milliseconds");
 
-    foreach (var position in positions)
-    {
-        Console.WriteLine($"Closest Position ID {position.PositionId}: {position.ClosestId}");
+        var startTimeClosest = DateTime.Now;
+        FindClosestRegistrations(positions, vehicles);
+        var endTimeClosest = DateTime.Now;
+        Console.WriteLine($"Finding closest vehicle execution time: {(endTimeClosest - startTimeClosest).TotalMilliseconds} milliseconds");
+
+        foreach (var position in positions)
+        {
+            Console.WriteLine($"Pos {position.PositionId}: {{ID: {position.ClosestId}, Registration: {position.VehicleRegistration}}}");
+        }
+
+        var endTime = DateTime.Now;
+        Console.WriteLine($"Total execution time: {(endTime - startTime).TotalMilliseconds} milliseconds");
     }
-
-    var endTime = DateTime.Now;
-    Console.WriteLine($"Total execution time: {(endTime - startTime).TotalMilliseconds} milliseconds");
-}
 
 }
