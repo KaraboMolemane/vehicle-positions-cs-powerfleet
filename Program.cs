@@ -11,7 +11,7 @@ public class Program
     public struct VehicleData
     {
         public int VehicleId;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] // Assuming max length of 256 for simplicity
         public string VehicleRegistration;
         public float Latitude;
         public float Longitude;
@@ -29,6 +29,7 @@ public class Program
 
     public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
+        // Haversine formula to calculate the distance between two points on the Earth
         double dLat = (lat2 - lat1) * M_PI / 180.0;
         double dLon = (lon2 - lon1) * M_PI / 180.0;
         lat1 = lat1 * M_PI / 180.0;
@@ -47,27 +48,41 @@ public class Program
 
     public static VehicleData[] ReadVehicleData(string filename)
     {
+        // Read binary data from file and convert to array of VehicleData
         string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", filename);
         byte[] fileBytes = File.ReadAllBytes(filePath);
+        int offset = 0;
         int size = Marshal.SizeOf<VehicleData>();
         int numEntries = fileBytes.Length / size;
 
         VehicleData[] vehicles = new VehicleData[numEntries];
-        IntPtr ptr = Marshal.AllocHGlobal(size);
 
         for (int i = 0; i < numEntries; i++)
         {
-            Marshal.Copy(fileBytes, i * size, ptr, size);
-            vehicles[i] = Marshal.PtrToStructure<VehicleData>(ptr);
+            vehicles[i].VehicleId = BitConverter.ToInt32(fileBytes, offset);
+            offset += sizeof(int);
+
+            int stringEnd = Array.IndexOf(fileBytes, (byte)0, offset);
+            vehicles[i].VehicleRegistration = System.Text.Encoding.ASCII.GetString(fileBytes, offset, stringEnd - offset);
+            offset = stringEnd + 1;
+
+            vehicles[i].Latitude = BitConverter.ToSingle(fileBytes, offset);
+            offset += sizeof(float);
+
+            vehicles[i].Longitude = BitConverter.ToSingle(fileBytes, offset);
+            offset += sizeof(float);
+
+            vehicles[i].RecordedTimeUTC = BitConverter.ToUInt64(fileBytes, offset);
+            offset += sizeof(ulong);
         }
 
-        Marshal.FreeHGlobal(ptr);
         return vehicles;
     }
 
 
     public static void FindClosestRegistrations(Position[] positions, VehicleData[] vehicles)
     {
+        // Sort vehicles by latitude for binary search
         Array.Sort(vehicles, CompareLatitude);
 
         for (int i = 0; i < positions.Length; i++)
@@ -126,8 +141,10 @@ public class Program
 
     public static void Main()
     {
+    
         var startTime = DateTime.Now;
 
+        // 10 pre-defined co-ordinates or positions
         Position[] positions = new Position[]
         {
             new Position { PositionId = 1, Latitude = 34.544909, Longitude = -102.100843 },
@@ -147,18 +164,20 @@ public class Program
         var endTimeFile = DateTime.Now;
         Console.WriteLine($"File reading execution time: {(endTimeFile - startTimeFile).TotalMilliseconds} milliseconds");
 
+        // // Find the closest registrations
         var startTimeClosest = DateTime.Now;
         FindClosestRegistrations(positions, vehicles);
         var endTimeClosest = DateTime.Now;
         Console.WriteLine($"Finding closest vehicle execution time: {(endTimeClosest - startTimeClosest).TotalMilliseconds} milliseconds");
 
+        // Print the results
         foreach (var position in positions)
         {
             Console.WriteLine($"Pos {position.PositionId}: {{ID: {position.ClosestId}, Registration: {position.VehicleRegistration}}}");
         }
 
+        // Print total execution time
         var endTime = DateTime.Now;
         Console.WriteLine($"Total execution time: {(endTime - startTime).TotalMilliseconds} milliseconds");
     }
-
 }
