@@ -98,7 +98,7 @@ The standard [application](https://github.com/MiXTelematics/Recruitment/blob/mas
 | Spec | Avarage execution time | Comment |
 |----------|----------|----------|
 | Processor	13th Gen Intel(R) Core(TM) i7-1355U, 1700 Mhz, 10 Core(s), 12 Logical Processor(s) | 300ms | Ran standard Powerfleet app here |
-| Intel(R) Core(TM) i5-8250U CPU @ 1.6GHz, 1800Mhz 4 Core(s), 8 Logical Processor(s) |  |  |
+| Intel(R) Core(TM) i5-8250U CPU @ 1.6GHz, 1800Mhz 4 Core(s), 8 Logical Processor(s) | 351ms |  |
 | Processor	Intel(R) Celeron(R) N4000 CPU @ 1.10GHz, 1101 Mhz, 2 Core(s), 2 Logical Processor(s) | 589ms |  |
 
 <!-- ROADMAP -->
