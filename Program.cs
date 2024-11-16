@@ -11,7 +11,6 @@ public class Program
     public struct VehicleData
     {
         public int VehicleId;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] // Assuming max length of 256 for simplicity
         public string VehicleRegistration;
         public float Latitude;
         public float Longitude;
@@ -97,7 +96,6 @@ public class Program
 
         return vehicles;
     }
-
 
     public static void FindClosestRegistrations(Position[] positions, VehicleData[] vehicles)
     {
