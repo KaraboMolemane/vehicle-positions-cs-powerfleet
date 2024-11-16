@@ -52,9 +52,27 @@ public class Program
         string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", filename);
         byte[] fileBytes = File.ReadAllBytes(filePath);
         int offset = 0;
-        int size = Marshal.SizeOf<VehicleData>();
-        int numEntries = fileBytes.Length / size;
+        int numEntries = 0;
 
+        // First, count the number of entries
+        while (offset < fileBytes.Length)
+        {
+            // Skip VehicleId
+            offset += sizeof(int);
+
+            // Find the end of the null-terminated string
+            int stringEnd = Array.IndexOf(fileBytes, (byte)0, offset);
+            if (stringEnd == -1) break; // No null terminator found, stop reading
+            offset = stringEnd + 1;
+
+            // Skip Latitude, Longitude, and RecordedTimeUTC
+            offset += sizeof(float) + sizeof(float) + sizeof(ulong);
+
+            numEntries++;
+        }
+
+        // Reset offset for actual reading
+        offset = 0;
         VehicleData[] vehicles = new VehicleData[numEntries];
 
         for (int i = 0; i < numEntries; i++)
@@ -62,6 +80,7 @@ public class Program
             vehicles[i].VehicleId = BitConverter.ToInt32(fileBytes, offset);
             offset += sizeof(int);
 
+            // Read the null-terminated string
             int stringEnd = Array.IndexOf(fileBytes, (byte)0, offset);
             vehicles[i].VehicleRegistration = System.Text.Encoding.ASCII.GetString(fileBytes, offset, stringEnd - offset);
             offset = stringEnd + 1;
@@ -162,6 +181,9 @@ public class Program
         VehicleData[] vehicles = ReadVehicleData("VehiclePositions.dat");
         var endTimeFile = DateTime.Now;
         Console.WriteLine($"File reading execution time: {Math.Round((endTimeFile - startTimeFile).TotalMilliseconds)} milliseconds");
+
+        // Print the number of items read from the file
+        Console.WriteLine($"Number of items read from the file: {vehicles.Length}");
 
         // Find the closest registrations
         var startTimeClosest = DateTime.Now;
