@@ -11,7 +11,6 @@ public class Program
     public struct VehicleData
     {
         public int VehicleId;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] // Assuming max length of 256 for simplicity
         public string VehicleRegistration;
         public float Latitude;
         public float Longitude;
@@ -52,9 +51,27 @@ public class Program
         string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", filename);
         byte[] fileBytes = File.ReadAllBytes(filePath);
         int offset = 0;
-        int size = Marshal.SizeOf<VehicleData>();
-        int numEntries = fileBytes.Length / size;
+        int numEntries = 0;
 
+        // First, count the number of entries
+        while (offset < fileBytes.Length)
+        {
+            // Skip VehicleId
+            offset += sizeof(int);
+
+            // Find the end of the null-terminated string
+            int stringEnd = Array.IndexOf(fileBytes, (byte)0, offset);
+            if (stringEnd == -1) break; // No null terminator found, stop reading
+            offset = stringEnd + 1;
+
+            // Skip Latitude, Longitude, and RecordedTimeUTC
+            offset += sizeof(float) + sizeof(float) + sizeof(ulong);
+
+            numEntries++;
+        }
+
+        // Reset offset for actual reading
+        offset = 0;
         VehicleData[] vehicles = new VehicleData[numEntries];
 
         for (int i = 0; i < numEntries; i++)
@@ -62,6 +79,7 @@ public class Program
             vehicles[i].VehicleId = BitConverter.ToInt32(fileBytes, offset);
             offset += sizeof(int);
 
+            // Read the null-terminated string
             int stringEnd = Array.IndexOf(fileBytes, (byte)0, offset);
             vehicles[i].VehicleRegistration = System.Text.Encoding.ASCII.GetString(fileBytes, offset, stringEnd - offset);
             offset = stringEnd + 1;
@@ -79,9 +97,11 @@ public class Program
         return vehicles;
     }
 
-
     public static void FindClosestRegistrations(Position[] positions, VehicleData[] vehicles)
     {
+        // Counter for distance calculations
+        int distanceCalculations = 0;
+
         // Sort vehicles by latitude for binary search
         Array.Sort(vehicles, CompareLatitude);
 
@@ -93,10 +113,12 @@ public class Program
 
             int left = 0;
             int right = vehicles.Length - 1;
+
             while (left <= right)
             {
                 int mid = left + (right - left) / 2;
                 double distance = CalculateDistance(position.Latitude, position.Longitude, vehicles[mid].Latitude, vehicles[mid].Longitude);
+                distanceCalculations++; // Increment counter
                 if (distance < minDistance)
                 {
                     minDistance = distance;
@@ -115,6 +137,7 @@ public class Program
             for (int j = closestIndex - 1; j >= 0 && Math.Abs(vehicles[j].Latitude - position.Latitude) < minDistance; j--)
             {
                 double distance = CalculateDistance(position.Latitude, position.Longitude, vehicles[j].Latitude, vehicles[j].Longitude);
+                distanceCalculations++; // Increment counter
                 if (distance < minDistance)
                 {
                     minDistance = distance;
@@ -124,6 +147,7 @@ public class Program
             for (int j = closestIndex + 1; j < vehicles.Length && Math.Abs(vehicles[j].Latitude - position.Latitude) < minDistance; j++)
             {
                 double distance = CalculateDistance(position.Latitude, position.Longitude, vehicles[j].Latitude, vehicles[j].Longitude);
+                distanceCalculations++; // Increment counter
                 if (distance < minDistance)
                 {
                     minDistance = distance;
@@ -135,8 +159,13 @@ public class Program
             {
                 positions[i].ClosestId = vehicles[closestIndex].VehicleId;
                 positions[i].VehicleRegistration = vehicles[closestIndex].VehicleRegistration;
+                positions[i].Latitude = vehicles[closestIndex].Latitude;
+                positions[i].Longitude = vehicles[closestIndex].Longitude;
             }
         }
+
+        // Print the total number of distance calculations
+        Console.WriteLine($"Total distance calculations: {distanceCalculations}");
     }
 
     public static void Main()
@@ -163,6 +192,9 @@ public class Program
         var endTimeFile = DateTime.Now;
         Console.WriteLine($"File reading execution time: {Math.Round((endTimeFile - startTimeFile).TotalMilliseconds)} milliseconds");
 
+        // Print the number of items read from the file
+        Console.WriteLine($"Number of items read from the file: {vehicles.Length}");
+
         // Find the closest registrations
         var startTimeClosest = DateTime.Now;
         FindClosestRegistrations(positions, vehicles);
@@ -172,7 +204,7 @@ public class Program
         // Print the results
         foreach (var position in positions)
         {
-            Console.WriteLine($"Pos {position.PositionId}: {{ID: {position.ClosestId}, Registration: {position.VehicleRegistration}}}");
+            Console.WriteLine($"Pos {position.PositionId}: {{ID: {position.ClosestId}, Registration: {position.VehicleRegistration}, Latitude: {position.Latitude}, Longitude: {position.Longitude}}}");
         }
 
         // Print total execution time
