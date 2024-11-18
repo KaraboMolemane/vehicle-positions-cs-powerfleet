@@ -99,6 +99,9 @@ public class Program
 
     public static void FindClosestRegistrations(Position[] positions, VehicleData[] vehicles)
     {
+        // Counter for distance calculations
+        int distanceCalculations = 0;
+
         // Sort vehicles by latitude for binary search
         Array.Sort(vehicles, CompareLatitude);
 
@@ -114,6 +117,7 @@ public class Program
             {
                 int mid = left + (right - left) / 2;
                 double distance = CalculateDistance(position.Latitude, position.Longitude, vehicles[mid].Latitude, vehicles[mid].Longitude);
+                distanceCalculations++; // Increment counter
                 if (distance < minDistance)
                 {
                     minDistance = distance;
@@ -132,6 +136,7 @@ public class Program
             for (int j = closestIndex - 1; j >= 0 && Math.Abs(vehicles[j].Latitude - position.Latitude) < minDistance; j--)
             {
                 double distance = CalculateDistance(position.Latitude, position.Longitude, vehicles[j].Latitude, vehicles[j].Longitude);
+                distanceCalculations++; // Increment counter
                 if (distance < minDistance)
                 {
                     minDistance = distance;
@@ -141,6 +146,7 @@ public class Program
             for (int j = closestIndex + 1; j < vehicles.Length && Math.Abs(vehicles[j].Latitude - position.Latitude) < minDistance; j++)
             {
                 double distance = CalculateDistance(position.Latitude, position.Longitude, vehicles[j].Latitude, vehicles[j].Longitude);
+                distanceCalculations++; // Increment counter
                 if (distance < minDistance)
                 {
                     minDistance = distance;
@@ -154,6 +160,9 @@ public class Program
                 positions[i].VehicleRegistration = vehicles[closestIndex].VehicleRegistration;
             }
         }
+
+        // Print the total number of distance calculations
+        Console.WriteLine($"Total distance calculations: {distanceCalculations}");
     }
 
     public static void Main()
