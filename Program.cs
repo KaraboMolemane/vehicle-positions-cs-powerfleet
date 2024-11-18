@@ -114,7 +114,6 @@ public class Program
             int left = 0;
             int right = vehicles.Length - 1;
 
-            // Perform binary search to find the closest latitude
             while (left <= right)
             {
                 int mid = left + (right - left) / 2;
@@ -135,11 +134,17 @@ public class Program
                 }
             }
 
-            // Check neighbors around the closest index found
-            int start = Math.Max(0, closestIndex - 1);
-            int end = Math.Min(vehicles.Length - 1, closestIndex + 1);
-
-            for (int j = start; j <= end; j++)
+            for (int j = closestIndex - 1; j >= 0 && Math.Abs(vehicles[j].Latitude - position.Latitude) < minDistance; j--)
+            {
+                double distance = CalculateDistance(position.Latitude, position.Longitude, vehicles[j].Latitude, vehicles[j].Longitude);
+                distanceCalculations++; // Increment counter
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    closestIndex = j;
+                }
+            }
+            for (int j = closestIndex + 1; j < vehicles.Length && Math.Abs(vehicles[j].Latitude - position.Latitude) < minDistance; j++)
             {
                 double distance = CalculateDistance(position.Latitude, position.Longitude, vehicles[j].Latitude, vehicles[j].Longitude);
                 distanceCalculations++; // Increment counter
@@ -154,6 +159,8 @@ public class Program
             {
                 positions[i].ClosestId = vehicles[closestIndex].VehicleId;
                 positions[i].VehicleRegistration = vehicles[closestIndex].VehicleRegistration;
+                positions[i].Latitude = vehicles[closestIndex].Latitude;
+                positions[i].Longitude = vehicles[closestIndex].Longitude;
             }
         }
 
@@ -197,7 +204,7 @@ public class Program
         // Print the results
         foreach (var position in positions)
         {
-            Console.WriteLine($"Pos {position.PositionId}: {{ID: {position.ClosestId}, Registration: {position.VehicleRegistration}}}");
+            Console.WriteLine($"Pos {position.PositionId}: {{ID: {position.ClosestId}, Registration: {position.VehicleRegistration}, Latitude: {position.Latitude}, Longitude: {position.Longitude}}}");
         }
 
         // Print total execution time
