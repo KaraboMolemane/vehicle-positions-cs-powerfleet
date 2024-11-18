@@ -113,6 +113,8 @@ public class Program
 
             int left = 0;
             int right = vehicles.Length - 1;
+
+            // Perform binary search to find the closest latitude
             while (left <= right)
             {
                 int mid = left + (right - left) / 2;
@@ -133,17 +135,11 @@ public class Program
                 }
             }
 
-            for (int j = closestIndex - 1; j >= 0 && Math.Abs(vehicles[j].Latitude - position.Latitude) < minDistance; j--)
-            {
-                double distance = CalculateDistance(position.Latitude, position.Longitude, vehicles[j].Latitude, vehicles[j].Longitude);
-                distanceCalculations++; // Increment counter
-                if (distance < minDistance)
-                {
-                    minDistance = distance;
-                    closestIndex = j;
-                }
-            }
-            for (int j = closestIndex + 1; j < vehicles.Length && Math.Abs(vehicles[j].Latitude - position.Latitude) < minDistance; j++)
+            // Check neighbors around the closest index found
+            int start = Math.Max(0, closestIndex - 1);
+            int end = Math.Min(vehicles.Length - 1, closestIndex + 1);
+
+            for (int j = start; j <= end; j++)
             {
                 double distance = CalculateDistance(position.Latitude, position.Longitude, vehicles[j].Latitude, vehicles[j].Longitude);
                 distanceCalculations++; // Increment counter
